@@ -1,4 +1,4 @@
 name        = "vault"
 description = "Password vault for AiOS"
 source      = "https://github.com/jduncan8142/AiOSVault.git"
-rev         = "main"
+rev         = "v0.1.0"
