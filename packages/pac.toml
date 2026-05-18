@@ -1,0 +1,4 @@
+name        = "pac"
+description = "Pac is AiOS's package manager."
+source      = "https://github.com/jduncan8142/AiOSPac.git"
+rev         = "v0.1.0"

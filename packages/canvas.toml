@@ -1,0 +1,4 @@
+name        = "canvas"
+description = "AiOS Graphical User Interface"
+source      = "https://github.com/jduncan8142/AiOSCanvas.git"
+rev         = "main"
