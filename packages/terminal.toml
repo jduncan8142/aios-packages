@@ -1,4 +1,4 @@
 name        = "terminal"
-description = "A terminal for AiOS."
+description = "Terminal emulator for AiOS"
 source      = "https://github.com/jduncan8142/AiOSTerminal.git"
-rev         = "main"
+rev         = "v0.1.0"
