@@ -1,0 +1,77 @@
+# Validate that every package manifest's pinned `rev` resolves to a real tag
+# on its `source` repository. This guards against pin drift like the historical
+# `canvas-v0.1.1` mismatch, where the index referenced a tag the source repo did
+# not carry.
+#
+# Token note: the component source repos are PRIVATE while this index is PUBLIC.
+# The default GITHUB_TOKEN is scoped to this repo only and CANNOT read the
+# private sources, so their lookups would 404. To resolve tags on the private
+# sources, add a `SUBMODULES_TOKEN` repository secret — a fine-grained PAT (or
+# GitHub App token) with `contents: read` on the AiOS component repos. When that
+# secret is absent the job still runs, but private-source lookups fail with an
+# explicit "needs SUBMODULES_TOKEN" message (not a misleading "tag missing").
+#
+# Every Action is pinned to a full 40-char commit SHA (AiOS Sprint 3 policy);
+# the `actions-pinned` job enforces that.
+
+name: manifest-rev-check
+
+on:
+  push:
+  pull_request:
+  # Lets Jason re-run the check on a schedule or by hand once the source repos
+  # move, without needing a new commit here.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rev-check:
+    name: revs resolve to tags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Check manifest revs resolve to tags
+        # Prefer a cross-repo SUBMODULES_TOKEN (can read the private sources);
+        # fall back to the workflow's GITHUB_TOKEN, which can only see public
+        # sources and this repo. `gh` reads GH_TOKEN.
+        env:
+          GH_TOKEN: ${{ secrets.SUBMODULES_TOKEN || secrets.GITHUB_TOKEN }}
+          SUBMODULES_TOKEN_SET: ${{ secrets.SUBMODULES_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          if [ "${SUBMODULES_TOKEN_SET}" = "true" ]; then
+            echo "Using SUBMODULES_TOKEN for source-repo tag resolution."
+          else
+            echo "::warning::SUBMODULES_TOKEN is not set — private source repos" \
+              "(AiOSCanvas, AiOSFSS, AiOSPac, AiOSTerminal, AiOSVault) cannot be" \
+              "read with the default GITHUB_TOKEN. Their rev checks will fail" \
+              "with an access error. Add a SUBMODULES_TOKEN secret with" \
+              "contents:read on the component repos to enable them."
+          fi
+          python3 .github/scripts/check-manifest-revs.py
+
+  actions-pinned:
+    name: actions pinned to SHA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Fail on unpinned Action references
+        run: |
+          set -euo pipefail
+          # Each Action ref must be a full 40-char commit SHA (Sprint 3 policy).
+          # Match only real YAML `uses:` keys (start of line after indent and an
+          # optional list dash) so the pattern strings in this script don't match
+          # themselves; strip any trailing "# vX.Y.Z" comment before the check.
+          unpinned=$(grep -rEh '^[[:space:]]*-?[[:space:]]*uses:[[:space:]]' .github/workflows/ \
+            | sed -E 's/^[[:space:]]*-?[[:space:]]*uses:[[:space:]]*//; s/[[:space:]]*#.*//; s/[[:space:]]*$//' \
+            | grep -vE '@[0-9a-f]{40}$' || true)
+          if [ -n "$unpinned" ]; then
+            echo "::error::Unpinned Action reference(s) — pin each to a full 40-char commit SHA:"
+            printf '%s\n' "$unpinned"
+            exit 1
+          fi
+          echo "All Action references are SHA-pinned."
