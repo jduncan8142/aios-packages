@@ -2,3 +2,4 @@ name        = "fss"
 description = "AiOS File System Sync"
 source      = "https://github.com/jduncan8142/AiOSFSS.git"
 rev         = "v0.1.0"
+signed      = true

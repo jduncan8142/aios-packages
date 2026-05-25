@@ -2,3 +2,4 @@ name        = "pac"
 description = "Pac is AiOS's package manager."
 source      = "https://github.com/jduncan8142/AiOSPac.git"
 rev         = "v0.2.0"
+signed      = true
