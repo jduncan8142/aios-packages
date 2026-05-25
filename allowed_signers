@@ -1,0 +1,14 @@
+# AiOS maintainer release-signing keys (SSH allowed-signers format).
+#
+# When a manifest in packages/ sets `signed = true`, `pac install`/`upgrade`
+# refuse to build unless the source repo's pinned `rev` is a git tag carrying
+# an SSH signature from one of the keys below. `pac` enforces this with
+# `git verify-tag` under `gpg.format=ssh`, passing this file as the
+# allowedSignersFile; a missing, unsigned, or unlisted-key tag fails the
+# install before any build runs.
+#
+# Field 1 is the principal: the email git records as the *tagger* on a signed
+# release tag (so it must match `git config user.email` at signing time).
+# The key is the dedicated Ed25519 release-signing key "aios-maintainer-signing",
+# kept separate from any authentication key.
+jason.matthew.duncan@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDRtdGWk8AKM6cHBtOu4+pPDbYqNn394yTJ79Wj4Myhj
