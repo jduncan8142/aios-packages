@@ -2,3 +2,4 @@ name        = "terminal"
 description = "Terminal emulator for AiOS"
 source      = "https://github.com/jduncan8142/AiOSTerminal.git"
 rev         = "v0.1.0"
+signed      = true
